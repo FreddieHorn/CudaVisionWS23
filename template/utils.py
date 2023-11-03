@@ -1,5 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import random
+import numpy as np
+import torch
 
 def smooth(f, K=5):
     """ Smoothing a function using a low-pass filter (mean) of size K """
@@ -43,6 +46,51 @@ def plot_loss(train_loss_list = [], val_loss_list = []):
     ax[1].set_ylabel("CE Loss")
     ax[1].set_yscale("log")
     ax[1].set_title("Training Progress (logscale)")
+    plt.show()
+
+
+def plot_loss_epoch(train_loss, test_loss):
+    """
+    Plot training and test loss per epoch.
+
+    Args:
+        train_loss (list): List of training loss values per epoch.
+        test_loss (list): List of test loss values per epoch.
+    """
+
+    epochs = range(1, len(train_loss) + 1)
+
+    plt.figure(figsize=(10, 5))
+    plt.plot(epochs, train_loss, 'bo-', label='Training Loss')
+    plt.plot(epochs, test_loss, 'r*-', label='Test Loss')
+    plt.title('Training and Test Loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+def plot_accuracy_epoch(test_accuracy, train_accuracy = []):
+    """
+    Plot training and test accuracy per epoch.
+
+    Args:
+        train_accuracy (list): List of training accuracy values per epoch.
+        test_accuracy (list): List of test accuracy values per epoch.
+    """
+    epochs = range(1, len(test_accuracy) + 1)
+
+    plt.figure(figsize=(10, 5))
+    
+    if train_accuracy:
+        plt.plot(epochs, train_accuracy, 'bo-', label='Training Accuracy')
+    
+    plt.plot(epochs, test_accuracy, 'r*-', label='Test Accuracy')
+    plt.title('Training and Test Accuracy')
+    plt.xlabel('Epoch')
+    plt.ylabel('Accuracy (%)')
+    plt.legend()
+    plt.grid(True)
     plt.show()
 
 def plot_accuracy(train_accuracy = [], val_accuracy = []):
@@ -110,3 +158,25 @@ def plot_gradients(norms, max_values, min_values):
     ax[2].set_title("Min Gradient Values Change")
 
     plt.show()
+
+
+
+def set_random_seeds(seed_value=42, use_gpu=False):
+    # Set the random seed for Python's random number generator
+    random.seed(seed_value)
+
+    # Set the seed for NumPy's random number generator
+    np.random.seed(seed_value)
+
+    # Set the seed for PyTorch's random number generator on the CPU
+    torch.manual_seed(seed_value)
+
+    if use_gpu and torch.cuda.is_available():
+        # Set the seed for PyTorch's random number generator on the GPU
+        torch.cuda.manual_seed_all(seed_value)
+        
+    # Ensure determinism
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+
+
