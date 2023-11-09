@@ -1,3 +1,4 @@
 BATCH_SIZE : 64
 NUM_EPOCHS : 20
-LR : 3e-4
+LR : 5e-4
+LRConvMix: 1e-3
