@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import random
 import numpy as np
 import torch
+import os
 
 def smooth(f, K=5):
     """ Smoothing a function using a low-pass filter (mean) of size K """
@@ -84,9 +85,11 @@ def plot_accuracy_epoch(test_accuracy, train_accuracy = []):
     
     if train_accuracy:
         plt.plot(epochs, train_accuracy, 'bo-', label='Training Accuracy')
+        plt.title('Training and Test Accuracy')
+
     
     plt.plot(epochs, test_accuracy, 'r*-', label='Test Accuracy')
-    plt.title('Training and Test Accuracy')
+    plt.title('Test Accuracy')
     plt.xlabel('Epoch')
     plt.ylabel('Accuracy (%)')
     plt.legend()
@@ -164,6 +167,7 @@ def plot_gradients(norms, max_values, min_values):
 def set_random_seeds(seed_value=42, use_gpu=False):
     # Set the random seed for Python's random number generator
     random.seed(seed_value)
+    os.environ['PYTHONHASHSEED'] = str(seed_value)
 
     # Set the seed for NumPy's random number generator
     np.random.seed(seed_value)
@@ -178,5 +182,6 @@ def set_random_seeds(seed_value=42, use_gpu=False):
     # Ensure determinism
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
+    torch.use_deterministic_algorithms(True)
 
 
