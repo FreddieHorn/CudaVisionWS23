@@ -4,6 +4,7 @@ import random
 import numpy as np
 import torch
 import os
+from tqdm import tqdm
 
 def smooth(f, K=5):
     """ Smoothing a function using a low-pass filter (mean) of size K """
@@ -184,4 +185,100 @@ def set_random_seeds(seed_value=42, use_gpu=False):
     torch.backends.cudnn.benchmark = False
     torch.use_deterministic_algorithms(True)
 
+@torch.no_grad()
+def eval_model(model, eval_loader, criterion, device):
+    """ 
+    Evaluating the model for either validation or test.
 
+    Parameters:
+    - model (nn.Module): The trained neural network model to be evaluated.
+    - eval_loader (torch.utils.data.DataLoader): DataLoader for the validation or test dataset.
+    - criterion (nn.Module): The loss function.
+    - device (torch.device): The device on which to perform evaluation (e.g., 'cuda' or 'cpu').
+
+    Returns:
+    - float: Accuracy on the validation or test dataset.
+    - float: Mean loss on the validation or test dataset.
+    """    
+    correct = 0
+    total = 0
+    loss_list = []
+    
+    for images, labels in eval_loader:
+        images = images.to(device)
+        labels = labels.to(device)
+        
+        # Forward pass only to get logits/output
+        outputs = model(images)
+                 
+        loss = criterion(outputs, labels)
+        loss_list.append(loss.item())
+            
+        # Get predictions from the maximum value
+        preds = torch.argmax(outputs, dim=1)
+        correct += len( torch.where(preds==labels)[0] )
+        total += len(labels)
+                 
+    # Total correct predictions and loss
+    accuracy = correct / total * 100
+    loss = np.mean(loss_list)
+    
+    return accuracy, loss
+
+def display_images(dataset, NUM_images = 8):
+    N_IMGS = 8
+    fig, ax = plt.subplots(1,N_IMGS)
+    fig.set_size_inches(3 * N_IMGS, 3)
+
+    ids = np.random.randint(low=0, high=len(dataset), size=N_IMGS)
+
+    for i, n in enumerate(ids):
+        img = dataset[n][0].numpy().reshape(3,224, 224).transpose(1, 2, 0)
+        ax[i].imshow(img)
+        ax[i].set_title(f"Img #{n}  Label: {dataset[n][1]}")
+        ax[i].axis("off")
+    plt.show()
+
+def train_epoch(model, train_loader, optimizer, criterion, device, mixup = None):
+
+    """ 
+    Training a model for one epoch.
+
+    Parameters:
+    - model (nn.Module): The neural network model to be trained.
+    - train_loader (torch.utils.data.DataLoader): DataLoader for the training dataset.
+    - optimizer (torch.optim.Optimizer): The optimization algorithm.
+    - criterion (nn.Module): The loss function.
+    - epoch (int): Current epoch number.
+    - device (torch.device): The device on which to perform training (e.g., 'cuda' or 'cpu').
+
+    Returns:
+    - float: Mean training loss for the epoch.
+    - list: List of individual training losses for each batch.
+    """
+    
+    loss_list = []
+    for i, (images, labels) in enumerate(train_loader):
+        if mixup:
+            images, labels = mixup(images, labels)
+        images = images.to(device)
+        labels = labels.to(device)
+        
+        # Clear gradients w.r.t. parameters
+        optimizer.zero_grad()
+         
+        # Forward pass to get output/logits
+        outputs = model(images)
+         
+        # Calculate Loss: softmax --> cross entropy loss
+        loss = criterion(outputs, labels)
+        loss_list.append(loss.item())
+         
+        # Getting gradients w.r.t. parameters
+        loss.backward()
+         
+        # Updating parameters
+        optimizer.step()
+        
+    mean_loss = np.mean(loss_list)
+    return mean_loss, loss_list
