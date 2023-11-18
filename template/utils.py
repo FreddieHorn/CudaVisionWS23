@@ -258,6 +258,7 @@ def train_epoch(model, train_loader, optimizer, criterion, device, mixup = None)
     """
     
     loss_list = []
+    acc_list = []
     for i, (images, labels) in enumerate(train_loader):
         if mixup:
             images, labels = mixup(images, labels)
@@ -269,6 +270,14 @@ def train_epoch(model, train_loader, optimizer, criterion, device, mixup = None)
          
         # Forward pass to get output/logits
         outputs = model(images)
+
+        # calculate accuracy
+        with torch.no_grad():
+            predicted = outputs.argmax(dim=-1)
+            correct = (predicted == labels).sum().item()
+            accuracy = correct/labels.shape[0] * 100
+
+        acc_list.append(accuracy)
          
         # Calculate Loss: softmax --> cross entropy loss
         loss = criterion(outputs, labels)
@@ -281,4 +290,5 @@ def train_epoch(model, train_loader, optimizer, criterion, device, mixup = None)
         optimizer.step()
         
     mean_loss = np.mean(loss_list)
-    return mean_loss, loss_list
+    mean_acc = np.mean(acc_list)
+    return mean_loss, loss_list, mean_acc
