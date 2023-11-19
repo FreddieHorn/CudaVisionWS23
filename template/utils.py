@@ -259,7 +259,8 @@ def train_epoch(model, train_loader, optimizer, criterion, device, mixup = None)
     
     loss_list = []
     acc_list = []
-    for i, (images, labels) in enumerate(train_loader):
+    progress_bar = tqdm(train_loader, total=len(train_loader))
+    for i, (images, labels) in enumerate(progress_bar):
         if mixup:
             images, labels = mixup(images, labels)
         images = images.to(device)

@@ -1,3 +1,4 @@
 BATCH_SIZE : 64
 NUM_EPOCHS : 10
 LR : 3e-4
+LRConvNext : 1e-3
